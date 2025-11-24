@@ -14,9 +14,6 @@ RUN bash -lc "sh <(curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/inst
     && . /etc/profile.d/nix.sh \
     && nix --version
 
-# Use a strict shell for all RUN commands to ensure failures exit immediately.
-SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
-
 ENV PATH="${PATH}:/nix/var/nix/profiles/default/bin"
 
 WORKDIR /app
@@ -32,7 +29,7 @@ WORKDIR /app/rain.orderbook
 RUN git checkout "$REMOTE_REPO_COMMIT"
 RUN cp .env.example .env
 RUN git submodule update --init --recursive
-RUN ./prep-base.sh
+RUN bash -euo pipefail -c "./prep-base.sh"
 RUN nix develop -c .#rainix-ob-cli-artifact
 RUN tar -xzf crates/cli/bin/rain-orderbook-cli.tar.gz -C /app
 RUN mv /app/rain-orderbook-cli /app/rain_orderbook_cli
