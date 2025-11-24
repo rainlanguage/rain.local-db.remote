@@ -22,7 +22,7 @@ COPY scripts ./scripts
 COPY flake.nix flake.lock ./
 
 ARG REMOTE_REPO_URL=https://github.com/rainlanguage/rain.orderbook
-ARG REMOTE_REPO_COMMIT=07a94259de218dd58de34fe3a5289c965cf277b6
+ARG REMOTE_REPO_COMMIT=bb325657ded8d78966e71aac0d500ad1dcdb84a3
 
 RUN git clone "$REMOTE_REPO_URL" /app/rain.orderbook
 WORKDIR /app/rain.orderbook
