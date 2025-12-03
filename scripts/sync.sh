@@ -31,4 +31,5 @@ echo "🚀 Running local-db sync via $CLI_BIN"
 "$CLI_BIN" local-db sync \
   --settings-yaml "$SETTINGS_YAML" \
   --api-token "$HYPER_RPC_API_TOKEN" \
-  --release-base-url "$RELEASE_BASE_URL"
+  --release-base-url "$RELEASE_BASE_URL" \
+  --debug-status
