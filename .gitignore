@@ -2,3 +2,4 @@
 .env
 /local-db
 rain*orderbook*cli
+pipeline.log
