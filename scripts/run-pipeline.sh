@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Load nix environment if available
+if [ -f /root/.nix-profile/etc/profile.d/nix.sh ]; then
+    . /root/.nix-profile/etc/profile.d/nix.sh
+elif [ -f /etc/profile.d/nix.sh ]; then
+    . /etc/profile.d/nix.sh
+fi
+
 REPO_DIR="${1:?Usage: $0 <repo-directory>}"
 LOG="$REPO_DIR/pipeline.log"
 LOCK=/tmp/pipeline.lock
