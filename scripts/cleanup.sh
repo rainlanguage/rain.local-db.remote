@@ -27,7 +27,6 @@ remove_path() {
 
 echo "🧽 Removing CLI artifacts..."
 remove_path "$ARCHIVE_PATH"
-remove_path "$BINARY_PATH"
 
 echo "🧽 Removing local-db directory..."
 remove_path "$LOCAL_DB_DIR"

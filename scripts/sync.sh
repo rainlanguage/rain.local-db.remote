@@ -18,7 +18,7 @@ for var in SETTINGS_YAML_URL HYPER_RPC_API_TOKEN RELEASE_BASE_URL; do
   fi
 done
 
-CLI_BIN="${CLI_BIN:-$PROJECT_ROOT/rain_orderbook_cli}"
+CLI_BIN="${CLI_BIN:-$PROJECT_ROOT/rain-orderbook-cli}"
 if [ ! -x "$CLI_BIN" ]; then
   echo "❌ CLI binary not found or not executable at $CLI_BIN"
   exit 1

@@ -52,7 +52,6 @@
               fi
 
               steps=(
-                "download-binary.sh"
                 "sync.sh"
                 "do-spaces-upload.sh"
                 "cleanup.sh"
