@@ -9,8 +9,17 @@ networks:
     chain-id: 8453
     network-id: 8453
     currency: ETH
+  robinhood:
+    rpcs:
+      - https://rpc.mainnet.chain.robinhood.com
+      - https://robinhood-rpc.publicnode.com
+      - https://robinhood.drpc.org
+    chain-id: 4663
+    network-id: 4663
+    currency: ETH
 subgraphs:
   base: https://subgraph.api.ormilabs.com/api/public/9f4fc2fa-4a15-44f7-a7c1-66fdaa518a71/subgraphs/ob4-base/prod/gn
+  robinhood: https://api.goldsky.com/api/public/project_clv14x04y9kzi01saerx7bxpg/subgraphs/raindex-robinhood-mainnet/0x37FC0EFec37D19f8A221aa4F8F7600C9ba2AcD20-b398652/gn
 metaboards:
   base: https://subgraph.api.ormilabs.com/api/public/9f4fc2fa-4a15-44f7-a7c1-66fdaa518a71/subgraphs/metadata-base/prod/gn
 raindexes:
@@ -20,10 +29,19 @@ raindexes:
     subgraph: base
     deployment-block: 41747644
     local-db-remote: raindex
+  robinhood:
+    address: 0x37FC0EFec37D19f8A221aa4F8F7600C9ba2AcD20
+    network: robinhood
+    deployment-block: 59557818
+    subgraph: robinhood
+    local-db-remote: raindex
 rainlangs:
   base:
     address: 0x22508460712C350e914b49155982d3A92D923b10
     network: base
+  robinhood:
+    address: 0x2DdEa6131E0e46536c6b658D5ACFf922E6133be5
+    network: robinhood
 using-tokens-from:
   - https://tokens.coingecko.com/base/all.json
 local-db-remotes:
@@ -37,4 +55,13 @@ local-db-sync:
     rate-limit-delay-ms: 5000
     finality-depth: 4
     bootstrap-block-threshold: 300
+    sync-interval-ms: 5000
+  robinhood:
+    batch-size: 5000
+    max-concurrent-batches: 2
+    retry-attempts: 3
+    retry-delay-ms: 1000
+    rate-limit-delay-ms: 5000
+    finality-depth: 100
+    bootstrap-block-threshold: 60000
     sync-interval-ms: 5000
