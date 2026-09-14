@@ -30,10 +30,6 @@ raindexes:
     deployment-block: 41747644
     local-db-remote: raindex
   robinhood:
-    # Canonical RaindexV6 on Robinhood Chain. No dedicated robinhood dump yet —
-    # reuse the shared raindex manifest URL; lookup is by chain-id + address so
-    # Base's dump is not applied. After the first successful robinhood sync,
-    # republish the manifest and keep this remote key.
     address: 0x37FC0EFec37D19f8A221aa4F8F7600C9ba2AcD20
     network: robinhood
     deployment-block: 59557818
