@@ -39,6 +39,7 @@
           config.allowUnfreePredicate = pkg:
             builtins.elem (pkgs.lib.getName pkg) [ "terraform" ];
         };
+        buildPkgs = import nixpkgs-tailscale { inherit system; };
 
         baseDevShells = rainix.devShells.${system};
         rainixPkgs = rainix.packages.${system};
@@ -174,13 +175,13 @@
         buildRaindexCliCommand = pkgs.writeShellApplication {
           name = "build-raindex-cli";
           runtimeInputs = with pkgs; [
-            cargo
+            buildPkgs.cargo
             coreutils
             gmp
             gnused
             openssl
             pkg-config
-            rustc
+            buildPkgs.rustc
             sqlite
           ];
           text = ''
