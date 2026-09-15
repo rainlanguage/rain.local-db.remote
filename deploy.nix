@@ -1,8 +1,8 @@
-{ deploy-rs, self }:
+{ deployRsLib, self }:
 
 let
   system = "x86_64-linux";
-  inherit (deploy-rs.lib.${system}) activate;
+  inherit (deployRsLib) activate;
 in {
   config = {
     nodes.local-db-remote = {
