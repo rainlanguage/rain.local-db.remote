@@ -2,6 +2,11 @@ name: List Deployments
 
 on:
   workflow_dispatch:
+    inputs:
+      deployment_id:
+        description: Optional deployment ID to inspect
+        required: false
+        type: string
 
 permissions:
   id-token: write
@@ -88,3 +93,29 @@ jobs:
           REMOTE
 
           cat /tmp/local-db-deployments.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Inspect deployment
+        if: inputs.deployment_id != ''
+        env:
+          DEPLOYMENT_ID: ${{ inputs.deployment_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          case "$DEPLOYMENT_ID" in
+            *[!a-zA-Z0-9_.-]*)
+              echo "Invalid deployment ID" >&2
+              exit 1
+              ;;
+          esac
+
+          ssh -i ~/.ssh/id_ed25519 "root@$HOST_IP" \
+            "DEPLOYMENT_ID=$DEPLOYMENT_ID bash -s" <<'REMOTE'
+            set -euo pipefail
+            service="local-db-sync@$DEPLOYMENT_ID.service"
+
+            systemctl show "$service" \
+              --property=LoadState,ActiveState,SubState,Result,ExecMainCode,ExecMainStatus,NRestarts,ActiveEnterTimestamp,InactiveEnterTimestamp
+            echo
+            journalctl -u "$service" --since "30 minutes ago" --no-pager -n 200
+          REMOTE
