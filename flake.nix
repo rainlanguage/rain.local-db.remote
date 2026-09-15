@@ -19,7 +19,20 @@
 
   outputs = { self, flake-utils, rainix, nixpkgs, nixpkgs-tailscale, ragenix
     , deploy-rs, disko, nixos-anywhere, ... }:
-    let deploySystem = "x86_64-linux";
+    let
+      deploySystem = "x86_64-linux";
+      deployBasePkgs = import nixpkgs-tailscale { system = deploySystem; };
+      deployRsPackage = deployBasePkgs.deploy-rs;
+      deployRsPkgs = import nixpkgs-tailscale {
+        system = deploySystem;
+        overlays = [
+          deploy-rs.overlays.default
+          (_: previous: {
+            deploy-rs = previous.deploy-rs // { deploy-rs = deployRsPackage; };
+          })
+        ];
+      };
+      deployRsLib = deployRsPkgs.deploy-rs.lib;
     in {
       nixosConfigurations.local-db-remote =
         let tailscalePkgs = import nixpkgs-tailscale { system = deploySystem; };
@@ -29,9 +42,8 @@
           modules = [ disko.nixosModules.disko ./os.nix ];
         };
 
-      deploy = (import ./deploy.nix { inherit deploy-rs self; }).config;
-      checks.${deploySystem} =
-        deploy-rs.lib.${deploySystem}.deployChecks self.deploy;
+      deploy = (import ./deploy.nix { inherit deployRsLib self; }).config;
+      checks.${deploySystem} = deployRsLib.deployChecks self.deploy;
     } // flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -429,8 +441,9 @@
         infraPkgs = import ./infra { inherit pkgs ragenix rainix system; };
 
         deployPkgs =
-          (import ./deploy.nix { inherit deploy-rs self; }).wrappers {
+          (import ./deploy.nix { inherit deployRsLib self; }).wrappers {
             inherit pkgs infraPkgs;
+            deployRsPackage = buildPkgs.deploy-rs;
             localSystem = system;
           };
 
@@ -509,7 +522,7 @@
 
         devShells.default = addBuildInputs baseDevShells.default (with pkgs; [
           awscli2
-          deploy-rs.packages.${system}.deploy-rs
+          buildPkgs.deploy-rs
           jq
           nixos-anywhere.packages.${system}.default
           ragenix.packages.${system}.default

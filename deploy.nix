@@ -1,8 +1,8 @@
-{ deploy-rs, self }:
+{ deployRsLib, self }:
 
 let
   system = "x86_64-linux";
-  inherit (deploy-rs.lib.${system}) activate;
+  inherit (deployRsLib) activate;
 in {
   config = {
     nodes.local-db-remote = {
@@ -16,10 +16,9 @@ in {
     };
   };
 
-  wrappers = { pkgs, infraPkgs, localSystem }:
+  wrappers = { pkgs, infraPkgs, deployRsPackage, localSystem }:
     let
-      deployInputs =
-        infraPkgs.buildInputs ++ [ deploy-rs.packages.${localSystem}.deploy-rs ];
+      deployInputs = infraPkgs.buildInputs ++ [ deployRsPackage ];
 
       deployPreamble = ''
         ${infraPkgs.parseIdentity}
@@ -33,10 +32,8 @@ in {
         ssh_flag="--ssh-opts=-i $identity"
       '';
 
-      deployFlags = if localSystem == system then
-        ""
-      else
-        "--skip-checks --remote-build";
+      deployFlags =
+        if localSystem == system then "" else "--skip-checks --remote-build";
     in {
       deployNixos = pkgs.writeShellApplication {
         name = "deploy-nixos";
