@@ -431,6 +431,7 @@
         deployPkgs =
           (import ./deploy.nix { inherit deploy-rs self; }).wrappers {
             inherit pkgs infraPkgs;
+            deployRsPackage = buildPkgs.deploy-rs;
             localSystem = system;
           };
 
@@ -509,7 +510,7 @@
 
         devShells.default = addBuildInputs baseDevShells.default (with pkgs; [
           awscli2
-          deploy-rs.packages.${system}.deploy-rs
+          buildPkgs.deploy-rs
           jq
           nixos-anywhere.packages.${system}.default
           ragenix.packages.${system}.default
