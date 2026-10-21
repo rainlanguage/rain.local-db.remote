@@ -1,4 +1,5 @@
-{ lib, modulesPath, pkgs, self, tailscalePkgs, ... }:
+# cacert: CA bundle for the host, from its own nixpkgs pin (see flake.nix).
+{ cacert, lib, modulesPath, pkgs, self, tailscalePkgs, ... }:
 
 let
   inherit (import ./keys.nix) roles;
@@ -54,6 +55,18 @@ in {
     enable = true;
     allowedTCPPorts = [ 22 ];
     trustedInterfaces = [ "tailscale0" ];
+  };
+
+  # Serve the pinned CA bundle at the paths security.pki would populate from
+  # the rainix nixpkgs cacert. Overriding the etc entries avoids an overlay,
+  # which would rebuild everything that depends on cacert.
+  environment.etc = lib.genAttrs [
+    "ssl/certs/ca-certificates.crt"
+    "ssl/certs/ca-bundle.crt"
+    "pki/tls/certs/ca-bundle.crt"
+  ] (_: { source = lib.mkForce "${cacert}/etc/ssl/certs/ca-bundle.crt"; }) // {
+    "ssl/trust-source".source =
+      lib.mkForce "${cacert.p11kit}/etc/ssl/trust-source";
   };
 
   nix = {
@@ -122,6 +135,11 @@ in {
       Unit = "local-db-sync.service";
     };
   };
+
+  # nix-daemon reads the read-only security.pki.caBundle, which still points at
+  # the rainix cacert.
+  systemd.services.nix-daemon.environment.CURL_CA_BUNDLE =
+    lib.mkForce "/etc/ssl/certs/ca-certificates.crt";
 
   systemd.services."local-db-sync@" = {
     description = "Local DB remote sync for deployment %i";

@@ -6,6 +6,10 @@
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.follows = "rainix/nixpkgs";
     nixpkgs-tailscale.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    # Pinned separately so the host can take a newer CA bundle
+    # (cacert >= 3.131.1) without moving the rainix nixpkgs input.
+    nixpkgs-cacert.url =
+      "github:NixOS/nixpkgs/f903b88037954e42a165c27b686201c2f242ae28";
 
     ragenix.url = "github:yaxitech/ragenix";
     deploy-rs.url = "github:serokell/deploy-rs";
@@ -17,8 +21,8 @@
     nixos-anywhere.inputs.nixpkgs.follows = "rainix/nixpkgs";
   };
 
-  outputs = { self, flake-utils, rainix, nixpkgs, nixpkgs-tailscale, ragenix
-    , deploy-rs, disko, nixos-anywhere, ... }:
+  outputs = { self, flake-utils, rainix, nixpkgs, nixpkgs-tailscale
+    , nixpkgs-cacert, ragenix, deploy-rs, disko, nixos-anywhere, ... }:
     let
       deploySystem = "x86_64-linux";
       deployBasePkgs = import nixpkgs-tailscale { system = deploySystem; };
@@ -38,7 +42,10 @@
         let tailscalePkgs = import nixpkgs-tailscale { system = deploySystem; };
         in rainix.inputs.nixpkgs.lib.nixosSystem {
           system = deploySystem;
-          specialArgs = { inherit self tailscalePkgs; };
+          specialArgs = {
+            inherit self tailscalePkgs;
+            cacert = nixpkgs-cacert.legacyPackages.${deploySystem}.cacert;
+          };
           modules = [ disko.nixosModules.disko ./os.nix ];
         };
 
