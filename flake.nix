@@ -7,7 +7,9 @@
     nixpkgs.follows = "rainix/nixpkgs";
     nixpkgs-tailscale.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     # Pinned separately so the host can take a newer CA bundle
-    # (cacert >= 3.131.1) without moving the rainix nixpkgs input.
+    # (cacert >= 3.131.1) without moving the rainix nixpkgs input. NSS 3.131.1
+    # drops emSign Root CA - C1, ECC Root CA - G3 and ECC Root CA - C3; it
+    # keeps emSign Root CA - G1, which is outside the agreed incident scope.
     nixpkgs-cacert.url =
       "github:NixOS/nixpkgs/f903b88037954e42a165c27b686201c2f242ae28";
 
