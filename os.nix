@@ -69,6 +69,12 @@ in {
       lib.mkForce "${cacert.p11kit}/etc/ssl/trust-source";
   };
 
+  assertions = [{
+    assertion = lib.versionOlder pkgs.cacert.version cacert.version;
+    message =
+      "rainix nixpkgs cacert ${pkgs.cacert.version} has caught up with the pinned cacert ${cacert.version}; remove the nixpkgs-cacert input, the /etc CA overrides and the nix-daemon CURL_CA_BUNDLE override.";
+  }];
+
   nix = {
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
