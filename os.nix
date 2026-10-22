@@ -1,8 +1,16 @@
 # cacert: CA bundle for the host, from its own nixpkgs pin (see flake.nix).
-{ cacert, lib, modulesPath, pkgs, self, tailscalePkgs, ... }:
+{ cacert, config, lib, modulesPath, pkgs, self, tailscalePkgs, ... }:
 
 let
   inherit (import ./keys.nix) roles;
+  # Apply the same policy the pinned nixpkgs security.pki module applies to its
+  # own cacert, including its CVE-2026-111943 blacklist entry.
+  pinnedCacert = cacert.override {
+    blacklist = config.security.pki.caCertificateBlacklist
+      ++ [ "Comodo AAA Services root" ];
+    extraCertificateFiles = config.security.pki.certificateFiles;
+    extraCertificateStrings = config.security.pki.certificates;
+  };
   runner = self.packages.${pkgs.system}.local-db-remote-runner;
 in {
   imports = [
@@ -64,10 +72,11 @@ in {
     "ssl/certs/ca-certificates.crt"
     "ssl/certs/ca-bundle.crt"
     "pki/tls/certs/ca-bundle.crt"
-  ] (_: { source = lib.mkForce "${cacert}/etc/ssl/certs/ca-bundle.crt"; }) // {
-    "ssl/trust-source".source =
-      lib.mkForce "${cacert.p11kit}/etc/ssl/trust-source";
-  };
+  ] (_: { source = lib.mkForce "${pinnedCacert}/etc/ssl/certs/ca-bundle.crt"; })
+    // {
+      "ssl/trust-source".source =
+        lib.mkForce "${pinnedCacert.p11kit}/etc/ssl/trust-source";
+    };
 
   assertions = [{
     assertion = lib.versionOlder pkgs.cacert.version cacert.version;
