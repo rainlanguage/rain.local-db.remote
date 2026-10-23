@@ -132,6 +132,8 @@ fi
 export AWS_ACCESS_KEY_ID="$SPACES_ACCESS_KEY"
 export AWS_SECRET_ACCESS_KEY="$SPACES_SECRET_KEY"
 export AWS_DEFAULT_REGION="$SPACES_REGION"
+# The AWS CLI otherwise uses its vendored CA bundle instead of the host's.
+export AWS_CA_BUNDLE="${AWS_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}"
 
 manifest_url=""
 manifest_dir_url=""

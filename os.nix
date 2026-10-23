@@ -1,7 +1,16 @@
-{ lib, modulesPath, pkgs, self, tailscalePkgs, ... }:
+# cacert: CA bundle for the host, from its own nixpkgs pin (see flake.nix).
+{ cacert, config, lib, modulesPath, pkgs, self, tailscalePkgs, ... }:
 
 let
   inherit (import ./keys.nix) roles;
+  # Apply the same policy the pinned nixpkgs security.pki module applies to its
+  # own cacert, including its CVE-2026-111943 blacklist entry.
+  pinnedCacert = cacert.override {
+    blacklist = config.security.pki.caCertificateBlacklist
+      ++ [ "Comodo AAA Services root" ];
+    extraCertificateFiles = config.security.pki.certificateFiles;
+    extraCertificateStrings = config.security.pki.certificates;
+  };
   runner = self.packages.${pkgs.system}.local-db-remote-runner;
 in {
   imports = [
@@ -55,6 +64,25 @@ in {
     allowedTCPPorts = [ 22 ];
     trustedInterfaces = [ "tailscale0" ];
   };
+
+  # Serve the pinned CA bundle at the paths security.pki would populate from
+  # the rainix nixpkgs cacert. Overriding the etc entries avoids an overlay,
+  # which would rebuild everything that depends on cacert.
+  environment.etc = lib.genAttrs [
+    "ssl/certs/ca-certificates.crt"
+    "ssl/certs/ca-bundle.crt"
+    "pki/tls/certs/ca-bundle.crt"
+  ] (_: { source = lib.mkForce "${pinnedCacert}/etc/ssl/certs/ca-bundle.crt"; })
+    // {
+      "ssl/trust-source".source =
+        lib.mkForce "${pinnedCacert.p11kit}/etc/ssl/trust-source";
+    };
+
+  assertions = [{
+    assertion = lib.versionOlder pkgs.cacert.version cacert.version;
+    message =
+      "rainix nixpkgs cacert ${pkgs.cacert.version} has caught up with the pinned cacert ${cacert.version}; remove the nixpkgs-cacert input, the /etc CA overrides and the nix-daemon CURL_CA_BUNDLE override.";
+  }];
 
   nix = {
     settings = {
@@ -122,6 +150,11 @@ in {
       Unit = "local-db-sync.service";
     };
   };
+
+  # nix-daemon reads the read-only security.pki.caBundle, which still points at
+  # the rainix cacert.
+  systemd.services.nix-daemon.environment.CURL_CA_BUNDLE =
+    lib.mkForce "/etc/ssl/certs/ca-certificates.crt";
 
   systemd.services."local-db-sync@" = {
     description = "Local DB remote sync for deployment %i";
